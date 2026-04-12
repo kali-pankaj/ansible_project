@@ -1,0 +1,25 @@
+---
+- name: Create multiple users
+  hosts: web
+  become: yes
+
+  vars:
+    users:
+      - user1
+      - user2
+      - user3
+      - user4
+      - user5
+
+  tasks:
+    - name: Create users
+      user:
+        name: "{{ item }}"
+        state: absent
+        create_home: yes
+      loop: "{{ users }}"
+
+    # - name: Install Nginx
+    #   yum:
+    #     name: nginx
+    #     state: absent
