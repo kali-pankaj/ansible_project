@@ -15,7 +15,8 @@
 
 # Ex 2: A collection of hosts belonging to the 'webservers' group:
 
-## [webservers]
+[web]
+15.207.86.177 ansible_user=ubuntu
 ## alpha.example.org
 ## beta.example.org
 ## 192.168.1.100

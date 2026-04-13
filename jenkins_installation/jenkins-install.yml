@@ -44,8 +44,4 @@
         state: started
         enabled: yes
 
-    - name: Allow port 8080 using UFW
-      ansible.builtin.ufw:
-        rule: allow
-        port: '8080'
-        proto: tcp
+    
