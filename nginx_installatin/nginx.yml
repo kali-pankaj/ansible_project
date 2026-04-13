@@ -1,0 +1,64 @@
+---
+- name: Install Nginx 
+  hosts: all
+  become: yes
+
+  collections:
+    - community.general
+    - ansible.posix
+
+  tasks:
+
+    # Install Nginx
+    - name: Install nginx
+      package: 
+        name: nginx
+        state: present
+
+    # Start Nginx
+    - name: Service Start and Enable
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+
+    # =========================
+    # Debian Firewall (UFW)
+    # =========================
+    - name: Install UFW Debian
+      apt:
+        name: ufw
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Allow port 80 (UFW)
+      command: ufw allow 80/tcp
+      when: ansible_os_family == "Debian"
+
+    - name: Enable UFW
+      command: ufw --force enable
+      when: ansible_os_family == "Debian"
+
+    # =========================
+    # RedHat Firewall (Firewalld)
+    # =========================
+    - name: Install Firewalld
+      yum:
+        name: firewalld 
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Start Firewalld
+      service: 
+        name: firewalld
+        state: started
+        enabled: yes
+      when: ansible_os_family == "RedHat"
+
+    - name: Open HTTP port
+      ansible.posix.firewalld:
+        service: http
+        permanent: yes
+        state: enabled
+        immediate: yes
+      when: ansible_os_family == "RedHat"
