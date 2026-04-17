@@ -1,0 +1,40 @@
+---
+- name: Install kubectl with auto-architecture detection
+  hosts: all
+  become: yes
+
+  vars:
+    kubectl_version: "v1.35.0"
+
+  tasks:
+
+    # 🔍 Detect architecture
+    - name: Set architecture fact
+      set_fact:
+        kubectl_arch: >-
+          {{ 'amd64' if ansible_architecture == 'x86_64'
+          else 'arm64' if ansible_architecture in ['aarch64', 'arm64']
+          else 'amd64' }}
+
+    # 🔗 Build URL dynamically
+    - name: Set download URL
+      set_fact:
+        download_url: "https://dl.k8s.io/release/{{ kubectl_version }}/bin/linux/{{ kubectl_arch }}/kubectl"
+
+    # 📥 Download kubectl
+    - name: Download kubectl
+      get_url:
+        url: "{{ download_url }}"
+        dest: /tmp/kubectl
+
+    # ⚙️ Install kubectl
+    - name: Install kubectl
+      command: install -o root -g root -m 0755 /tmp/kubectl /usr/local/bin/kubectl
+
+    # 🧪 Verify
+    - name: Check version
+      command: kubectl version --client
+      register: output
+
+    - debug:
+        var: output.stdout

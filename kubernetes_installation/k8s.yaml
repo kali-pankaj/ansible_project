@@ -1,0 +1,47 @@
+---
+- name: Install kubectl on Linux systems
+  hosts: all
+  become: yes
+
+  vars:
+    kubectl_version: "v1.35.0"
+    kubectl_arch: "amd64"
+    download_url: "https://dl.k8s.io/release/{{ kubectl_version }}/bin/linux/{{ kubectl_arch }}/kubectl"
+
+  tasks:
+
+    # 📥 Download kubectl binary
+    - name: Download kubectl binary
+      get_url:
+        url: "{{ download_url }}"
+        dest: /tmp/kubectl
+        mode: '0644'
+
+    # 🔐 Download checksum file
+    - name: Download kubectl checksum
+      get_url:
+        url: "{{ download_url }}.sha256"
+        dest: /tmp/kubectl.sha256
+        mode: '0644'
+
+    # ✅ Verify checksum (CORRECT WAY)
+    - name: Verify kubectl checksum
+      shell: |
+        cd /tmp
+        sha256sum -c kubectl.sha256
+      register: checksum_result
+      failed_when: "'FAILED' in checksum_result.stdout"
+      changed_when: false
+
+    # ⚙️ Install kubectl to system path
+    - name: Install kubectl binary
+      command: install -o root -g root -m 0755 /tmp/kubectl /usr/local/bin/kubectl
+
+    # 🧪 Verify installation
+    - name: Check kubectl version
+      command: kubectl version --client
+      register: kubectl_output
+
+    - name: Show kubectl version
+      debug:
+        var: kubectl_output.stdout
